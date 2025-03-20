@@ -24,7 +24,7 @@ import numpy as np
 bl_info = {
     "name": "Threshold Alpha",
     "author": "todashuta",
-    "version": (1, 0, 1),
+    "version": (1, 0, 2),
     "blender": (2, 93, 0),  # Python 3.9
     "location": "Image Editor > Sidebar > Tool > Threshold Alpha",
     "description": "",
@@ -39,10 +39,13 @@ class THRESHOLD_ALPHA_OT_main(bpy.types.Operator):
     bl_idname = "image.threshold_alpha"
     bl_label = "Threshold Alpha"
     bl_description = "Threshold Alpha"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    value: bpy.props.FloatProperty(name="Value", default=0.0, min=0.0, max=1.0)
+    do_reload: bpy.props.BoolProperty(name="Reload")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.shift_key_down = False
 
     @classmethod
     def poll(cls, context: bpy.types.Context) -> bool:
@@ -53,13 +56,13 @@ class THRESHOLD_ALPHA_OT_main(bpy.types.Operator):
         return True
 
     def invoke(self, context, event):
-        self.shift_key_down = event.shift
+        self.do_reload = event.shift
         return self.execute(context)
 
     def execute(self, context: bpy.types.Context) -> set[str]:
         target_image = context.space_data.image
 
-        if self.shift_key_down:
+        if self.do_reload:
             target_image.reload()
 
         width, height = target_image.size
@@ -69,8 +72,7 @@ class THRESHOLD_ALPHA_OT_main(bpy.types.Operator):
 
         Alpha = target_image_pixel_data[:,:,3]
 
-        val = context.scene.threshold_alpha_value
-        target_image_pixel_data[:,:,3] = np.where(Alpha > val, 1.0, 0.0)
+        target_image_pixel_data[:,:,3] = np.where(Alpha > self.value, 1.0, 0.0)
 
         target_image.pixels.foreach_set(target_image_pixel_data.ravel())
         target_image.update()
@@ -88,7 +90,8 @@ class THRESHOLD_ALPHA_PT_panel(bpy.types.Panel):
         scene = context.scene
         layout = self.layout
         layout.prop(scene, "threshold_alpha_value")
-        layout.operator(THRESHOLD_ALPHA_OT_main.bl_idname)
+        op = layout.operator(THRESHOLD_ALPHA_OT_main.bl_idname)
+        op.value = scene.threshold_alpha_value
 
 
 classes = (
