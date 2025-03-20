@@ -24,7 +24,7 @@ import numpy as np
 bl_info = {
     "name": "Threshold Alpha",
     "author": "todashuta",
-    "version": (1, 0, 0),
+    "version": (1, 0, 1),
     "blender": (2, 93, 0),  # Python 3.9
     "location": "Image Editor > Sidebar > Tool > Threshold Alpha",
     "description": "",
@@ -40,7 +40,9 @@ class THRESHOLD_ALPHA_OT_main(bpy.types.Operator):
     bl_label = "Threshold Alpha"
     bl_description = "Threshold Alpha"
 
-    shift_key_down = False
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.shift_key_down = False
 
     @classmethod
     def poll(cls, context: bpy.types.Context) -> bool:
